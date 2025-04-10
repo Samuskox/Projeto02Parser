@@ -144,6 +144,18 @@ public class Parser {
          * nem varRW. Use a mensagem "Invalid initial decl.".
          */
         
+        if ( scanner.getSymbol() == Symbol.constRW ) {
+            parseConstDecl();
+        } else if ( scanner.getSymbol() == Symbol.varRW ) {
+            parseVarDecl();
+        } else if ( scanner.getSymbol() == Symbol.typeRW ) {
+            parseArrayTypeDecl();
+        } else {
+            throw new InternalError("Invalid initial decl.");
+            
+        }
+
+        
         // <editor-fold defaultstate="collapsed" desc="Implementação">
                     
         // sua implementação aqui
