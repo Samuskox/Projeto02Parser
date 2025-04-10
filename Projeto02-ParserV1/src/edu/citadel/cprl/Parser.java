@@ -468,9 +468,32 @@ public class Parser {
         // <editor-fold defaultstate="collapsed" desc="Implementação">
                     
         // sua implementação aqui
+        
+        Symbol symbol = scanner.getSymbol();
+        if ( symbol == Symbol.identifier ) {
+            IdType idType = idTable.get( scanner.getToken() );
+        if ( idType != null ) {
+            if ( idType == IdType.variableId ) {
+                parseAssignmentStmt();
+        } else if ( idType == IdType.procedureId ) {
+            parseProcedureCallStmt();
+        } else {
+                    //throw error();
+        }
+        } else {
+                    // throw error();
+        }
+        
+        } else if (symbol == Symbol.ifRW) {
+            parseIfStmt();
+        } else if (symbol == Symbol.loopRW || symbol == Symbol.whileRW) {
+            parseLoopStmt();
+        } else if (symbol == Symbol.exitRW) {
+            parseExitStmt();
 
         // </editor-fold>
         
+        }
     }
 
     /**
