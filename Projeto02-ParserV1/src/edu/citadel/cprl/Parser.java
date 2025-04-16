@@ -143,7 +143,7 @@ public class Parser {
          * Deve-se lançar um internalError se o símbolo não for constRW, typeRW
          * nem varRW. Use a mensagem "Invalid initial decl.".
          */
-        
+
         if ( scanner.getSymbol() == Symbol.constRW ) {
             parseConstDecl();
         } else if ( scanner.getSymbol() == Symbol.varRW ) {
@@ -151,16 +151,8 @@ public class Parser {
         } else if ( scanner.getSymbol() == Symbol.typeRW ) {
             parseArrayTypeDecl();
         } else {
-            throw new InternalError("Invalid initial decl.");
-            
+            throw new InternalError("Invalid initial decl."); 
         }
-
-        
-        // <editor-fold defaultstate="collapsed" desc="Implementação">
-                    
-        // sua implementação aqui
-
-        // </editor-fold>
         
     }
 
