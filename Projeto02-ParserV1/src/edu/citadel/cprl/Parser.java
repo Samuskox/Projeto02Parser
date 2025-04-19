@@ -136,6 +136,8 @@ public class Parser {
      * 
      * initialDecl = constDecl | arrayTypeDecl | varDecl .
      */
+
+    //!DONE
     public void parseInitialDecl() throws IOException {
         
         /* Atenção!
@@ -151,7 +153,7 @@ public class Parser {
         } else if ( scanner.getSymbol() == Symbol.typeRW ) {
             parseArrayTypeDecl();
         } else {
-            throw new InternalError("Invalid initial decl."); 
+            throw internalError("Invalid initial decl."); 
         }
         
     }
@@ -161,11 +163,29 @@ public class Parser {
      * 
      * constDecl = "const" constId ":=" literal ";" .
      */
+
+    //! DONE
     public void parseConstDecl() throws IOException {
         
         // <editor-fold defaultstate="collapsed" desc="Implementação">
                     
-        // sua implementação aqui
+        try {
+            match(Symbol.constRW);
+
+            Token idToken = scanner.getToken();
+            match( Symbol.identifier );
+            idTable.add(idToken, IdType.variableId);
+            
+            match(Symbol.assign);
+            
+            parseLiteral();
+            
+            match(Symbol.semicolon);
+
+        } catch (ParserException e) {
+            ErrorHandler.getInstance().reportError( e );
+            exit();
+        }
 
         // </editor-fold>
         
@@ -259,11 +279,26 @@ public class Parser {
      * 
      * arrayTypeDecl = "type" typeId "=" "array" "[" intConstValue "]" "of" typeName ";" .
      */
+
+    //! DONE
     public void parseArrayTypeDecl() throws IOException {
         
         // <editor-fold defaultstate="collapsed" desc="Implementação">
                     
-        // sua implementação aqui
+        try {
+            match(Symbol.typeRW);
+            match(Symbol.identifier);
+            match(Symbol.equals);
+            match(Symbol.arrayRW);
+            match(Symbol.leftBracket);
+            parseConstValue();
+            match(Symbol.rightBracket);
+            match(Symbol.ofRW);
+            parseTypeName();
+            match(Symbol.semicolon);
+        } catch (ParserException e) {
+            e.printStackTrace();
+        }
 
         // </editor-fold>
         
@@ -316,11 +351,15 @@ public class Parser {
      * 
      * subprogramDecls = ( subprogramDecl )* .
      */
+
+    //! DONE
     public void parseSubprogramDecls() throws IOException {
         
         // <editor-fold defaultstate="collapsed" desc="Implementação">
-                    
-        // sua implementação aqui
+        
+        while (scanner.getSymbol() == Symbol.procedureRW || scanner.getSymbol() == Symbol.functionRW) {
+            parseSubprogramDecl();
+        }
 
         // </editor-fold>
         
@@ -331,6 +370,8 @@ public class Parser {
      * 
      * subprogramDecl = procedureDecl | functionDecl .
      */
+
+    //! DONE
     public void parseSubprogramDecl() throws IOException {
         
         /* Atenção!
@@ -341,7 +382,13 @@ public class Parser {
         
         // <editor-fold defaultstate="collapsed" desc="Implementação">
                     
-        // sua implementação aqui
+        if (scanner.getSymbol() == Symbol.procedureRW) {
+            parseProcedureDecl();
+        } else if(scanner.getSymbol() == Symbol.functionRW){
+            parseFunctionDecl();
+        } else{
+            throw internalError("Invalid subprogram decl.");
+        }
 
         // </editor-fold>
         
@@ -392,11 +439,28 @@ public class Parser {
      * 
      * functionDecl = "function" funcId ( formalParameters )? "return" typeName "is" initialDecls statementPart funcId ";" .
      */
+
+    //! DONE
     public void parseFunctionDecl() throws IOException {
         
         // <editor-fold defaultstate="collapsed" desc="Implementação">
                     
-        // sua implementação aqui
+        try {
+            match(Symbol.functionRW);
+            match(Symbol.identifier);
+            if (scanner.getSymbol() == Symbol.leftBracket) {
+                matchCurrentSymbol();
+            }
+            match(Symbol.returnRW);
+            parseTypeName();
+            match(Symbol.isRW);
+            parseInitialDecls();
+            parseStatementPart();
+            match(Symbol.identifier);
+            match(Symbol.semicolon);
+        } catch (ParserException e) {
+            e.printStackTrace();
+        }
 
         // </editor-fold>
         
@@ -407,11 +471,23 @@ public class Parser {
      * 
      * formalParameters = "(" parameterDecl ( "," parameterDecl )* ")" .
      */
+
+    //! DONE
     public void parseFormalParameters() throws IOException {
         
         // <editor-fold defaultstate="collapsed" desc="Implementação">
                     
-        // sua implementação aqui
+        try {
+            match(Symbol.leftParen);
+            parseParameterDecl();
+            while (scanner.getSymbol() == Symbol.comma) {
+                matchCurrentSymbol();
+                parseParameterDecl();
+            }
+            match(Symbol.rightParen);
+        } catch (ParserException e) {
+            e.printStackTrace();
+        }
 
         // </editor-fold>
         
@@ -422,11 +498,22 @@ public class Parser {
      * 
      * parameterDecl = ( "var" )? paramId ":" typeName .
      */
+
+    //! DONE
     public void parseParameterDecl() throws IOException {
         
         // <editor-fold defaultstate="collapsed" desc="Implementação">
-                    
-        // sua implementação aqui
+        
+        if (scanner.getSymbol() == Symbol.varRW) {
+            matchCurrentSymbol();
+        }
+        try {
+            match(Symbol.identifier);
+            match(Symbol.colon);
+            parseTypeName();
+        } catch (ParserException e) {
+            e.printStackTrace();
+        }
 
         // </editor-fold>
         
@@ -455,37 +542,17 @@ public class Parser {
      * 
      * statements = ( statement )* .
      */
+
+    //! DONE
     public void parseStatements() throws IOException {
         
         // <editor-fold defaultstate="collapsed" desc="Implementação">
-                    
-        // sua implementação aqui
-        
-        Symbol symbol = scanner.getSymbol();
-        if ( symbol == Symbol.identifier ) {
-            IdType idType = idTable.get( scanner.getToken() );
-        if ( idType != null ) {
-            if ( idType == IdType.variableId ) {
-                parseAssignmentStmt();
-        } else if ( idType == IdType.procedureId ) {
-            parseProcedureCallStmt();
-        } else {
-                    //throw error();
+
+        while (scanner.getSymbol().isStmtStarter()) {
+            parseStatement();
         }
-        } else {
-                    // throw error();
-        }
-        
-        } else if (symbol == Symbol.ifRW) {
-            parseIfStmt();
-        } else if (symbol == Symbol.loopRW || symbol == Symbol.whileRW) {
-            parseLoopStmt();
-        } else if (symbol == Symbol.exitRW) {
-            parseExitStmt();
 
         // </editor-fold>
-        
-        }
     }
 
     /**
@@ -494,6 +561,8 @@ public class Parser {
      * statement = assignmentStmt | ifStmt | loopStmt | exitStmt | readStmt
      *           | writeStmt | writelnStmt | procedureCallStmt | returnStmt .
      */
+
+    //! DONE
     public void parseStatement() throws IOException {
         
         // assume que scanner.getSymbol() pode iniciar uma instrução
@@ -508,7 +577,30 @@ public class Parser {
         
         // <editor-fold defaultstate="collapsed" desc="Implementação">
                     
-        // sua implementação aqui
+        Symbol symbol = scanner.getSymbol();
+
+        if ( symbol == Symbol.identifier ) {
+            IdType idType = idTable.get( scanner.getToken() );
+            if ( idType != null ) {
+                if ( idType == IdType.variableId ) {
+                    parseAssignmentStmt();
+                } else if ( idType == IdType.procedureId ) {
+                    parseProcedureCallStmt();
+                } else {
+                        //throw error();
+                }
+            } else {
+                        // throw error();
+            }
+        
+        } else if (symbol == Symbol.ifRW) {
+            parseIfStmt();
+        } else if (symbol == Symbol.loopRW || symbol == Symbol.whileRW) {
+            parseLoopStmt();
+        } else if (symbol == Symbol.exitRW) {
+            parseExitStmt();
+        
+        }
 
         // </editor-fold>
 
@@ -519,11 +611,20 @@ public class Parser {
      * 
      * assignmentStmt = variable ":=" expression ";" .
      */
+
+    //! DONE
     public void parseAssignmentStmt() throws IOException {
         
         // <editor-fold defaultstate="collapsed" desc="Implementação">
                     
-        // sua implementação aqui
+        parseVariable();
+        try {
+            match(Symbol.assign);
+            parseExpression();
+            match(Symbol.semicolon);
+        } catch (ParserException e) {
+            e.printStackTrace();
+        }
 
         // </editor-fold>
         
@@ -536,11 +637,33 @@ public class Parser {
      *          ( "elsif" booleanExpr "then" statements )*
      *          ( "else" statements )? "end" "if" ";" .
      */
+
+    //! DONE
     public void parseIfStmt() throws IOException {
         
         // <editor-fold defaultstate="collapsed" desc="Implementação">
                     
-        // sua implementação aqui
+        try {
+            match(Symbol.ifRW);
+            parseExpression();
+            match(Symbol.thenRW);
+            parseStatements();
+            while (scanner.getSymbol() == Symbol.elsifRW) {
+                parseExpression();
+                match(Symbol.thenRW);
+                parseStatements();
+            }
+            if (scanner.getSymbol() == Symbol.elseRW) {
+                matchCurrentSymbol();
+                parseStatements();
+            }
+            match(Symbol.endRW);
+            match(Symbol.ifRW);
+            match(Symbol.semicolon);
+        } catch (ParserException e) {
+            ErrorHandler.getInstance().reportError( e );
+            exit();
+        }
 
         // </editor-fold>
         
@@ -551,11 +674,25 @@ public class Parser {
      * 
      * loopStmt = ( "while" booleanExpr )? "loop" statements "end" "loop" ";" .
      */
+
+    //! DONE
     public void parseLoopStmt() throws IOException {
         
         // <editor-fold defaultstate="collapsed" desc="Implementação">
                     
-        // sua implementação aqui
+        try {
+            if (scanner.getSymbol() == Symbol.whileRW) {
+                matchCurrentSymbol();
+                parseExpression();
+            }
+            match(Symbol.loopRW);
+            parseStatements();
+            match(Symbol.endRW);
+            match(Symbol.loopRW);
+            match(Symbol.semicolon);
+        } catch (ParserException e) {
+            e.printStackTrace();
+        }
 
         // </editor-fold>
         
@@ -566,11 +703,22 @@ public class Parser {
      * 
      * exitStmt = "exit" ( "when" booleanExpr )? ";" .
      */
+
+    //! DONE
     public void parseExitStmt() throws IOException {
         
         // <editor-fold defaultstate="collapsed" desc="Implementação">
                     
-        // sua implementação aqui
+        try {
+            match(Symbol.exitRW);
+            if (scanner.getSymbol() == Symbol.whenRW) {
+                matchCurrentSymbol();
+                parseExpression();
+            }
+            match(Symbol.semicolon);
+        } catch (ParserException e) {
+            e.printStackTrace();
+        }
 
         // </editor-fold>
         
@@ -581,11 +729,19 @@ public class Parser {
      * 
      * readStmt = "read" variable ";" .
      */
+
+    //! DONE
     public void parseReadStmt() throws IOException {
         
         // <editor-fold defaultstate="collapsed" desc="Implementação">
                     
-        // sua implementação aqui
+        try {
+            match(Symbol.readRW);
+            parseVariable();
+            match(Symbol.semicolon);
+        } catch (ParserException e) {
+            e.printStackTrace();
+        }
 
         // </editor-fold>
         
@@ -596,11 +752,19 @@ public class Parser {
      * 
      * writeStmt = "write" expressions ";" .
      */
+
+    //! DONE
     public void parseWriteStmt() throws IOException {
         
         // <editor-fold defaultstate="collapsed" desc="Implementação">
                     
-        // sua implementação aqui
+        try {
+            match(Symbol.writeRW);
+            parseExpressions();
+            match(Symbol.semicolon);
+        } catch (ParserException e) {
+            e.printStackTrace();
+        }
 
         // </editor-fold>
         
@@ -611,11 +775,17 @@ public class Parser {
      * 
      * expressions = expression ( "," expression )* .
      */
+
+    //! DONE
     public void parseExpressions() throws IOException {
         
-        // <editor-fold defaultstate="collapsed" desc="Implementação">
-                    
-        // sua implementação aqui
+        // <editor-fold defaultstate="collapsed" desc="Implementação">    
+        
+        parseExpression();
+        while (scanner.getSymbol() == Symbol.comma) {
+            matchCurrentSymbol();
+            parseExpression();
+        }
 
         // </editor-fold>
         
@@ -654,7 +824,15 @@ public class Parser {
         
         // <editor-fold defaultstate="collapsed" desc="Implementação">
                     
-        // sua implementação aqui
+        try {
+            match(Symbol.identifier);
+            if (scanner.getSymbol() == Symbol.leftParen) {
+                parseActualParameters();
+            }
+            match(Symbol.semicolon);
+        } catch (ParserException e) {
+            e.printStackTrace();
+        }
 
         // </editor-fold>
         
@@ -669,7 +847,13 @@ public class Parser {
         
         // <editor-fold defaultstate="collapsed" desc="Implementação">
                     
-        // sua implementação aqui
+        try {
+            match(Symbol.leftParen);
+            parseExpressions();
+            match(Symbol.rightParen);
+        } catch (ParserException e) {
+            e.printStackTrace();
+        }
 
         // </editor-fold>
         
@@ -684,7 +868,15 @@ public class Parser {
         
         // <editor-fold defaultstate="collapsed" desc="Implementação">
                     
-        // sua implementação aqui
+        try {
+            match(Symbol.returnRW);
+            if (scanner.getSymbol().isExprStarter()) {
+                parseExpression();
+            }
+            match(Symbol.semicolon);
+        } catch (ParserException e) {
+            e.printStackTrace();
+        }
 
         // </editor-fold>
         
@@ -754,6 +946,8 @@ public class Parser {
      * expression = relation ( logicalOp relation )* .
      *  logicalOp = "and" | "or" .
      */
+
+    //! DONE
     public void parseExpression() throws IOException {
         
         parseRelation();
@@ -771,11 +965,17 @@ public class Parser {
      *     relation = simpleExpr ( relationalOp simpleExpr )? .
      * relationalOp = "=" | "!=" | "<" | "<=" | ">" | ">=" .
      */
+
+    //! DONE
     public void parseRelation() throws IOException {
         
         // <editor-fold defaultstate="collapsed" desc="Implementação">
                     
-        // sua implementação aqui
+        parseSimpleExpr();
+        if (scanner.getSymbol().isRelationalOperator()) {
+            matchCurrentSymbol();
+            parseSimpleExpr();
+        }
 
         // </editor-fold>
         
@@ -787,11 +987,20 @@ public class Parser {
      * simpleExpr = ( addingOp )? term ( addingOp term )* .
      *   addingOp = "+" | "-" .
      */
+
+    //! DONE
     public void parseSimpleExpr() throws IOException {
         
         // <editor-fold defaultstate="collapsed" desc="Implementação">
                     
-        // sua implementação aqui
+        if (scanner.getSymbol().isAddingOperator()) {
+            matchCurrentSymbol();
+        }
+        parseTerm();
+        while (scanner.getSymbol().isAddingOperator()) {
+            matchCurrentSymbol();
+            parseTerm();
+        }
 
         // </editor-fold>
         
@@ -803,11 +1012,17 @@ public class Parser {
      *          term = factor ( multiplyingOp factor )* .
      * multiplyingOp = "*" | "/" | "mod" .
      */
+
+    //! DONE
     public void parseTerm() throws IOException {
         
         // <editor-fold defaultstate="collapsed" desc="Implementação">
                     
-        // sua implementação aqui
+        parseFactor();
+        while (scanner.getSymbol().isMultiplyingOperator()) {
+            matchCurrentSymbol();
+            parseFactor();
+        }
 
         // </editor-fold>
         
@@ -877,11 +1092,26 @@ public class Parser {
      * 
      * constValue = literal | constId .
      */
+
+    //? IT'S RIGHT, RIGHT?
+    //! DONE???¹
     public void parseConstValue() throws IOException {
         
+        
         // <editor-fold defaultstate="collapsed" desc="Implementação">
-                    
-        // sua implementação aqui
+
+        if (scanner.getSymbol().isLiteral()) {
+            matchCurrentSymbol();
+        } else{
+            try {
+                Token idToken = scanner.getToken();
+                match( Symbol.identifier );
+                idTable.add(idToken, IdType.variableId);
+            } catch (ParserException e) {
+                ErrorHandler.getInstance().reportError( e );
+                exit();
+            }
+        }
 
         // </editor-fold>
         
@@ -908,11 +1138,24 @@ public class Parser {
      * 
      * functionCall = funcId ( actualParameters )? .
      */
+
+    // !DONE
     public void parseFunctionCall() throws IOException {
         
         // <editor-fold defaultstate="collapsed" desc="Implementação">
                     
-        // sua implementação aqui
+        try {
+            Token idToken = scanner.getToken();
+            match( Symbol.identifier );
+            idTable.add(idToken, IdType.variableId);
+        } catch (ParserException e) {
+            ErrorHandler.getInstance().reportError( e );
+            exit();
+        }
+
+        if (scanner.getSymbol() == Symbol.leftParen) {
+            parseActualParameters();
+        }
 
         // </editor-fold>
         
