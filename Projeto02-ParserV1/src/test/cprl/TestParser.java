@@ -28,7 +28,7 @@ public class TestParser {
         //executar( "../examples/Incorrect/CPRL0/Incorrect_101.cprl" );  // 01
         //executar( "../examples/Incorrect/CPRL0/Incorrect_102.cprl" );  // 02
         //executar( "../examples/Incorrect/CPRL0/Incorrect_103.cprl" );  // 03
-        executar( "../examples/Incorrect/CPRL0/Incorrect_104.cprl" );  // 04
+        //executar( "../examples/Incorrect/CPRL0/Incorrect_104.cprl" );  // 04
         //executar( "../examples/Incorrect/CPRL0/Incorrect_105.cprl" );  // 05
         //executar( "../examples/Incorrect/CPRL0/Incorrect_106.cprl" );  // 06
         //executar( "../examples/Incorrect/CPRL0/Incorrect_107.cprl" );  // 07
@@ -45,7 +45,7 @@ public class TestParser {
         //executar( "../examples/Incorrect/CPRL0/Incorrect_118.cprl" );  // 18
         //executar( "../examples/Incorrect/CPRL0/Incorrect_119.cprl" );  // 19
         //executar( "../examples/Incorrect/CPRL0/Incorrect_120.cprl" );  // 20
-        //executar( "../examples/Incorrect/CPRL0/Incorrect_121.cprl" );  // 21
+        //executar( "../examples/Incorrect/CPRL0/Incorrect_121.cprl" );  // 21 <-- desse
         //executar( "../examples/Incorrect/CPRL0/Incorrect_122.cprl" );  // 22
         //executar( "../examples/Incorrect/CPRL0/Incorrect_123.cprl" );  // 23
         //executar( "../examples/Incorrect/CPRL0/Incorrect_124.cprl" );  // 24

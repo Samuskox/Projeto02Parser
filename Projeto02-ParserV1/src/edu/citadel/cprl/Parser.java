@@ -153,7 +153,7 @@ public class Parser {
         } else if ( scanner.getSymbol() == Symbol.typeRW ) {
             parseArrayTypeDecl();
         } else {
-            throw internalError("Invalid initial decl."); 
+            throw new InternalError("Invalid initial decl."); 
         }
         
     }
@@ -175,12 +175,13 @@ public class Parser {
             Token idToken = scanner.getToken();
             match( Symbol.identifier );
             idTable.add(idToken, IdType.variableId);
-            
+            match(Symbol.identifier);
             match(Symbol.assign);
             
             parseLiteral();
             
             match(Symbol.semicolon);
+            idTable.add(idToken, IdType.constantId);
 
         } catch (ParserException e) {
             ErrorHandler.getInstance().reportError( e );
@@ -287,11 +288,19 @@ public class Parser {
                     
         try {
             match(Symbol.typeRW);
+            Token arrayToken = scanner.getToken();
+            idTable.add(arrayToken, IdType.arrayTypeId);
             match(Symbol.identifier);
             match(Symbol.equals);
             match(Symbol.arrayRW);
             match(Symbol.leftBracket);
-            parseConstValue();
+
+            if (scanner.getSymbol() == Symbol.intLiteral) {
+                matchCurrentSymbol();
+            } else {
+                throw error("Invalid constant.");
+            }
+            //parseConstValue();
             match(Symbol.rightBracket);
             match(Symbol.ofRW);
             parseTypeName();
@@ -449,7 +458,10 @@ public class Parser {
                     
         try {
             match(Symbol.functionRW);
+            Token funcToken = scanner.getToken();
             match(Symbol.identifier);
+            idTable.add(funcToken, IdType.functionId);
+            idTable.openScope();
             if (scanner.getSymbol() == Symbol.leftBracket) {
                 matchCurrentSymbol();
             }
@@ -458,7 +470,19 @@ public class Parser {
             match(Symbol.isRW);
             parseInitialDecls();
             parseStatementPart();
+
+            idTable.closeScope();
+
+            Token funcToken2 = scanner.getToken();
+
             match(Symbol.identifier);
+
+            if (!funcToken.getText().equals(funcToken2.getText())) {
+                throw error(
+                    funcToken2.getPosition(),
+                    "Function name mismatch."
+                );
+            }
             match(Symbol.semicolon);
         } catch (ParserException e) {
             ErrorHandler.getInstance().reportError( e );
@@ -482,11 +506,15 @@ public class Parser {
                     
         try {
             match(Symbol.leftParen);
-            parseParameterDecl();
-            while (scanner.getSymbol() == Symbol.comma) {
-                matchCurrentSymbol();
+            if (scanner.getSymbol() != Symbol.rightParen) {
                 parseParameterDecl();
+
+                while (scanner.getSymbol() == Symbol.comma) {
+                    matchCurrentSymbol();
+                    parseParameterDecl();
+                }
             }
+
             match(Symbol.rightParen);
         } catch (ParserException e) {
             ErrorHandler.getInstance().reportError( e );
@@ -508,12 +536,22 @@ public class Parser {
         
         // <editor-fold defaultstate="collapsed" desc="Implementação">
         
-        if (scanner.getSymbol() == Symbol.varRW) {
-            matchCurrentSymbol();
-        }
+        
         try {
+            Symbol symbol = scanner.getSymbol();
+
+            if (symbol == Symbol.varRW) {
+                matchCurrentSymbol();
+                symbol = scanner.getSymbol();
+            }
+
+            Token paramId = scanner.getToken();
             match(Symbol.identifier);
+
+            idTable.add(paramId, IdType.variableId);
+
             match(Symbol.colon);
+
             parseTypeName();
         } catch (ParserException e) {
             ErrorHandler.getInstance().reportError( e );
@@ -584,27 +622,46 @@ public class Parser {
                     
         Symbol symbol = scanner.getSymbol();
 
-        if ( symbol == Symbol.identifier ) {
-            IdType idType = idTable.get( scanner.getToken() );
-            if ( idType != null ) {
-                if ( idType == IdType.variableId ) {
-                    parseAssignmentStmt();
-                } else if ( idType == IdType.procedureId ) {
-                    parseProcedureCallStmt();
+        try {
+            if (symbol == Symbol.identifier) {
+                IdType idType = idTable.get(scanner.getToken());
+                if (idType != null) {
+                    if (idType == IdType.variableId) {
+                        parseAssignmentStmt();
+                    } else if (idType == IdType.procedureId) {
+                        parseProcedureCallStmt();
+                    } else {
+                        throw error(
+                            "Identifier \"" +
+                            scanner.getToken() +
+                            "\" cannot start a statement."
+                        );
+                    }
                 } else {
-                        //throw error();
+                    throw error(
+                        "Identifier \"" +
+                        scanner.getToken() +
+                        "\" has not been declared."
+                    );
                 }
-            } else {
-                        // throw error();
+            } else if (symbol == Symbol.ifRW) {
+                parseIfStmt();
+            } else if (symbol == Symbol.loopRW || symbol == Symbol.whileRW) {
+                parseLoopStmt();
+            } else if (symbol == Symbol.exitRW) {
+                parseExitStmt();
+            } else if (symbol == Symbol.readRW) {
+                parseReadStmt();
+            } else if (symbol == Symbol.writeRW) {
+                parseWriteStmt();
+            } else if (symbol == Symbol.writelnRW) {
+                parseWritelnStmt();
+            } else if (symbol == Symbol.returnRW) {
+                parseReturnStmt();
             }
-        
-        } else if (symbol == Symbol.ifRW) {
-            parseIfStmt();
-        } else if (symbol == Symbol.loopRW || symbol == Symbol.whileRW) {
-            parseLoopStmt();
-        } else if (symbol == Symbol.exitRW) {
-            parseExitStmt();
-        
+        } catch (ParserException e) {
+            ErrorHandler.getInstance().reportError(e);
+            exit();
         }
 
         // </editor-fold>
@@ -624,6 +681,7 @@ public class Parser {
                     
         parseVariable();
         try {
+            parseVariable();
             match(Symbol.assign);
             parseExpression();
             match(Symbol.semicolon);
@@ -655,6 +713,7 @@ public class Parser {
             match(Symbol.thenRW);
             parseStatements();
             while (scanner.getSymbol() == Symbol.elsifRW) {
+                matchCurrentSymbol();
                 parseExpression();
                 match(Symbol.thenRW);
                 parseStatements();
@@ -1116,14 +1175,7 @@ public class Parser {
         if (scanner.getSymbol().isLiteral()) {
             matchCurrentSymbol();
         } else{
-            try {
-                Token idToken = scanner.getToken();
-                match( Symbol.identifier );
-                idTable.add(idToken, IdType.variableId);
-            } catch (ParserException e) {
-                ErrorHandler.getInstance().reportError( e );
-                exit();
-            }
+            matchCurrentSymbol();
         }
 
         // </editor-fold>
@@ -1158,9 +1210,7 @@ public class Parser {
         // <editor-fold defaultstate="collapsed" desc="Implementação">
                     
         try {
-            Token idToken = scanner.getToken();
-            match( Symbol.identifier );
-            idTable.add(idToken, IdType.variableId);
+           match(Symbol.identifier);
         } catch (ParserException e) {
             ErrorHandler.getInstance().reportError( e );
             exit();
