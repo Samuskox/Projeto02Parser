@@ -175,14 +175,12 @@ public class Parser {
 
             Token idToken = scanner.getToken();
             match( Symbol.identifier );
-            idTable.add(idToken, IdType.variableId);
-            match(Symbol.identifier);
+            idTable.add(idToken, IdType.constantId);
             match(Symbol.assign);
             
             parseLiteral();
             
             match(Symbol.semicolon);
-            idTable.add(idToken, IdType.constantId);
 
         } catch (ParserException e) {
             ErrorHandler.getInstance().reportError( e );
@@ -679,8 +677,7 @@ public class Parser {
     public void parseAssignmentStmt() throws IOException {
         
         // <editor-fold defaultstate="collapsed" desc="Implementação">
-                    
-        parseVariable();
+
         try {
             parseVariable();
             match(Symbol.assign);
