@@ -366,8 +366,8 @@ public class Parser {
     public void parseSubprogramDecls() throws IOException {
         
         // <editor-fold defaultstate="collapsed" desc="Implementação">
-        
-        while (scanner.getSymbol() == Symbol.procedureRW || scanner.getSymbol() == Symbol.functionRW) {
+
+        while (scanner.getSymbol().isSubprogramDeclStarter()) {
             parseSubprogramDecl();
         }
 
@@ -461,8 +461,8 @@ public class Parser {
             match(Symbol.identifier);
             idTable.add(funcToken, IdType.functionId);
             idTable.openScope();
-            if (scanner.getSymbol() == Symbol.leftBracket) {
-                matchCurrentSymbol();
+            if (scanner.getSymbol() == Symbol.leftParen) {
+                parseFormalParameters();
             }
             match(Symbol.returnRW);
             parseTypeName();
