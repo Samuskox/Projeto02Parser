@@ -297,7 +297,9 @@ public class Parser {
             parseTypeName();
             match(Symbol.semicolon);
         } catch (ParserException e) {
-            e.printStackTrace();
+            ErrorHandler.getInstance().reportError(e);
+            exit();
+            
         }
 
         // </editor-fold>
@@ -623,7 +625,8 @@ public class Parser {
             parseExpression();
             match(Symbol.semicolon);
         } catch (ParserException e) {
-            e.printStackTrace();
+            ErrorHandler.getInstance().reportError(e);
+            exit();
         }
 
         // </editor-fold>
@@ -691,7 +694,8 @@ public class Parser {
             match(Symbol.loopRW);
             match(Symbol.semicolon);
         } catch (ParserException e) {
-            e.printStackTrace();
+            ErrorHandler.getInstance().reportError( e );
+            exit();
         }
 
         // </editor-fold>
@@ -831,7 +835,8 @@ public class Parser {
             }
             match(Symbol.semicolon);
         } catch (ParserException e) {
-            e.printStackTrace();
+            ErrorHandler.getInstance().reportError(e);
+            exit();
         }
 
         // </editor-fold>
@@ -852,7 +857,8 @@ public class Parser {
             parseExpressions();
             match(Symbol.rightParen);
         } catch (ParserException e) {
-            e.printStackTrace();
+            ErrorHandler.getInstance().reportError(e);
+            exit();
         }
 
         // </editor-fold>
@@ -875,7 +881,8 @@ public class Parser {
             }
             match(Symbol.semicolon);
         } catch (ParserException e) {
-            e.printStackTrace();
+            ErrorHandler.getInstance().reportError(e);
+            exit();
         }
 
         // </editor-fold>
