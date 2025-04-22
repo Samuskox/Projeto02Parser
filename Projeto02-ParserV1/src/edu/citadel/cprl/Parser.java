@@ -102,6 +102,7 @@ public class Parser {
         } catch ( ParserException e ) {
             ErrorHandler.getInstance().reportError( e );
             exit();
+            //oqueee
         }
         
     }
